@@ -48,7 +48,7 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
   const entregues = ents.filter(e => e.status === 'entregue').length
   const insucessos = ents.filter(e => e.status === 'insucesso').length
   const pendentes = ents.filter(e => ['pendente', 'em_andamento'].includes(e.status)).length
-  const comObs = ents.filter(e => e.obs_parceiro && !e.entregador_id).length
+  const comObs = ents.filter(e => e.obs_parceiro && !(e.entregadores as any)?.length).length
 
   return (
     <div className="fade-in">
@@ -120,7 +120,7 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
               {ents.map(e => {
                 const empresa = e.empresas as any
                 const entregador = e.entregadores as any
-                const temObs = e.obs_parceiro && !e.entregador_id
+                const temObs = e.obs_parceiro && !(e.entregadores as any)?.length
                 return (
                   <tr key={e.id} className={temObs ? 'bg-amber-50/40' : ''}>
                     <td>
