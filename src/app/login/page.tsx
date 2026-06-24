@@ -1,11 +1,9 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,7 +14,7 @@ export default function LoginPage() {
     setLoading(true)
     const { error } = await createClient().auth.signInWithPassword({ email, password })
     if (error) { toast.error('E-mail ou senha inválidos'); setLoading(false); return }
-    router.push('/dashboard'); router.refresh()
+    window.location.href = '/dashboard'
   }
 
   return (
