@@ -44,7 +44,11 @@ export default function Sidebar({ perfil, nome }: { perfil: PerfilUsuario; nome:
     <aside className="sidebar">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100">
-        {/* TODO: substituir pela logo <img src="..." /> hospedada no Supabase Storage */}
+        <img
+          src="https://oejjjhytfjiyffcohkyp.supabase.co/storage/v1/object/public/assets/Logo_Colorido_4x_1.png"
+          alt="Vegas Logística"
+          className="h-8 w-auto"
+        />
         <div>
           <div className="text-sm font-bold text-gray-900">Vegas Logística</div>
           <div className="text-[10px] text-gray-400">Sistema logístico</div>

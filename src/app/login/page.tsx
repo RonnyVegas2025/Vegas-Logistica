@@ -22,7 +22,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          {/* TODO: substituir pela logo <img src="..." /> hospedada no Supabase Storage */}
+          <img
+            src="https://oejjjhytfjiyffcohkyp.supabase.co/storage/v1/object/public/assets/Logo_Colorido_4x_1.png"
+            alt="Vegas Logística"
+            className="h-16 w-auto mx-auto mb-2"
+          />
           <h1 className="text-xl font-bold text-gray-900">Vegas Logística</h1>
           <p className="text-sm text-gray-400 mt-1">Sistema de logística de cartões</p>
         </div>
