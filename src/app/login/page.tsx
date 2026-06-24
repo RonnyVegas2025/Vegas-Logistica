@@ -12,9 +12,20 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { error } = await createClient().auth.signInWithPassword({ email, password })
-    if (error) { toast.error('E-mail ou senha inválidos'); setLoading(false); return }
-    window.location.href = '/dashboard'
+    const { data, error } = await createClient().auth.signInWithPassword({ email, password })
+    console.log('RESULTADO LOGIN:', { error, session: data?.session, user: data?.user })
+    if (error) {
+      toast.error('Erro: ' + error.message)
+      setLoading(false)
+      return
+    }
+    if (data?.session) {
+      console.log('SESSÃO OK, redirecionando...')
+      window.location.replace('/dashboard')
+      return
+    }
+    console.log('SEM SESSÃO, sem erro')
+    setLoading(false)
   }
 
   return (
