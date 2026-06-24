@@ -8,10 +8,10 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { cookies: {
       getAll() { return request.cookies.getAll() },
-      setAll(cs) {
+      setAll(cs: {name:string;value:string;options?:Record<string,unknown>}[]) {
         cs.forEach(({name,value}) => request.cookies.set(name,value))
         res = NextResponse.next({ request })
-        cs.forEach(({name,value,options}) => res.cookies.set(name,value,options))
+        cs.forEach(({name,value,options}) => res.cookies.set(name,value,options as any))
       },
     }}
   )
@@ -25,3 +25,4 @@ export async function middleware(request: NextRequest) {
   return res
 }
 export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] }
+
