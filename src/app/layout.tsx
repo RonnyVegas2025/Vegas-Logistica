@@ -3,7 +3,7 @@ import './globals.css'
 import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
-  title: 'CartãoLog',
+  title: 'Vegas Logística',
   description: 'Sistema de controle de remessas e entregas de cartões',
 }
 

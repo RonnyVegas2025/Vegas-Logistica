@@ -44,14 +44,10 @@ export default function Sidebar({ perfil, nome }: { perfil: PerfilUsuario; nome:
     <aside className="sidebar">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-gray-100">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/>
-          </svg>
-        </div>
+        {/* TODO: substituir pela logo <img src="..." /> hospedada no Supabase Storage */}
         <div>
-          <div className="text-sm font-bold text-gray-900">CartãoLog</div>
-          <div className="text-[10px] text-gray-400">{perfil === 'parceiro' ? 'Portal Parceiro' : 'Painel Admin'}</div>
+          <div className="text-sm font-bold text-gray-900">Vegas Logística</div>
+          <div className="text-[10px] text-gray-400">Sistema logístico</div>
         </div>
       </div>
 
