@@ -187,3 +187,4 @@ Colunas aceitas no CSV:
 | valor_entrega | Sim | 70.00 |
 
 > Se a empresa já estiver cadastrada no sistema (mesmo CNPJ ou nome), ela será vinculada automaticamente e o endereço cadastrado será usado.
+
