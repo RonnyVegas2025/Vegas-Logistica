@@ -14,8 +14,9 @@ const NAV: Item[] = [
   { label:'Fechamento',   href:'/fechamento',   emoji:'💰', perfis:['admin','financeiro'] },
 ]
 const CADASTROS: Item[] = [
-  { label:'Empresas',     href:'/empresas',     emoji:'🏢', perfis:['admin'] },
-  { label:'Entregadores', href:'/entregadores', emoji:'🚴', perfis:['admin'] },
+  { label:'Filiais',      href:'/filiais',      emoji:'🏬', perfis:['admin'] },
+  { label:'Empresas',     href:'/empresas',     emoji:'🏢', perfis:['admin','financeiro'] },
+  { label:'Entregadores', href:'/entregadores', emoji:'🚴', perfis:['admin','financeiro'] },
 ]
 
 export default function Sidebar({ perfil, nome }: { perfil: PerfilUsuario; nome: string }) {
@@ -61,7 +62,7 @@ export default function Sidebar({ perfil, nome }: { perfil: PerfilUsuario; nome:
         <div className="flex flex-col gap-0.5">
           {NAV.map(i => <NavLink key={i.href} item={i} />)}
         </div>
-        {perfil === 'admin' && (
+        {(perfil === 'admin' || perfil === 'financeiro') && (
           <>
             <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 py-2 mt-3">Cadastros</div>
             <div className="flex flex-col gap-0.5">

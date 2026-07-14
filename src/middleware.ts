@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
           )
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options as any)
           )
         },
       },
@@ -29,15 +29,19 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname === '/') {
-    return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
+    return NextResponse.redirect(
+      new URL(user ? '/dashboard' : '/login', request.url)
+    )
   }
 
   if (pathname.startsWith('/login')) {
-    if (user) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
     return supabaseResponse
   }
 
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
     return supabaseResponse
   }
 
@@ -49,5 +53,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

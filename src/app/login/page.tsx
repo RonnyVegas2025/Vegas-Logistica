@@ -12,19 +12,24 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    const { data, error } = await createClient().auth.signInWithPassword({ email, password })
-    console.log('RESULTADO LOGIN:', { error, session: data?.session, user: data?.user })
+
+    const supabase = createClient()
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
     if (error) {
-      toast.error('Erro: ' + error.message)
+      toast.error('E-mail ou senha inválidos')
       setLoading(false)
       return
     }
-    if (data?.session) {
-      console.log('SESSÃO OK, redirecionando...')
-      window.location.replace('/dashboard')
+
+    if (data.session) {
+      // Aguarda o cookie ser gravado antes de redirecionar
+      await supabase.auth.setSession(data.session)
+      window.location.href = '/dashboard'
       return
     }
-    console.log('SEM SESSÃO, sem erro')
+
+    toast.error('Erro ao iniciar sessão. Tente novamente.')
     setLoading(false)
   }
 
@@ -45,8 +50,15 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
                 <label className="form-label">E-mail</label>
-                <input type="email" className="form-input" placeholder="seu@email.com"
-                  value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
               </div>
               <div>
                 <label className="form-label">Senha</label>
@@ -68,7 +80,11 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="btn btn-primary w-full justify-center mt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary w-full justify-center mt-1"
+              >
                 {loading ? 'Entrando…' : 'Entrar'}
               </button>
             </form>
@@ -78,4 +94,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
