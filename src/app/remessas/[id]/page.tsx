@@ -139,7 +139,7 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
                       {e.obs_parceiro
                         ? (
                           <div className={`text-xs rounded px-2 py-1.5 ${temObs ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-gray-50 text-gray-600'}`}>
-                            "{e.obs_parceiro}"
+                            &ldquo;{e.obs_parceiro}&rdquo;
                           </div>
                         )
                         : isParceiro

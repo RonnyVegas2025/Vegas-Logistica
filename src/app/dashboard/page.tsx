@@ -106,7 +106,7 @@ export default async function DashboardPage() {
                     <div className="text-xs font-semibold text-gray-800">{(e.empresas as any)?.razao_social}</div>
                     <div className="text-xs text-gray-500 mt-0.5">Remessa: {(e.remessas as any)?.codigo}</div>
                     <div className="text-xs bg-white rounded p-2 mt-1.5 border border-amber-200 text-amber-800 italic">
-                      "{e.obs_parceiro}"
+                      &ldquo;{e.obs_parceiro}&rdquo;
                     </div>
                     <Link href={`/entregas/${e.id}`} className="btn btn-xs mt-2 border-amber-300">Registrar entregador</Link>
                   </div>
