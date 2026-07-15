@@ -16,8 +16,51 @@ export default function EmpresaModal({ empresa, action, parceiros }: Props) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string[]>>({})
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false)
   const router = useRouter()
   const isEdit = !!empresa
+
+  async function buscarCnpj() {
+    const cnpjInput = (document.getElementById('cnpj-input') as HTMLInputElement)?.value
+    const cnpj = cnpjInput?.replace(/\D/g, '')
+    if (!cnpj || cnpj.length !== 14) {
+      toast.error('Digite um CNPJ válido com 14 dígitos')
+      return
+    }
+    setBuscandoCnpj(true)
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+      if (!res.ok) throw new Error('CNPJ não encontrado')
+      const data = await res.json()
+
+      // Preenche os campos do formulário
+      const set = (id: string, val: string) => {
+        const el = document.getElementById(id) as HTMLInputElement | null
+        if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })) }
+      }
+
+      set('razao-social-input', data.razao_social || '')
+      set('nome-fantasia-input', data.nome_fantasia || '')
+      set('logradouro-input', (data.logradouro || '') + (data.numero ? ', ' + data.numero : ''))
+      set('numero-input', data.numero || '')
+      set('complemento-input', data.complemento || '')
+      set('bairro-input', data.bairro || '')
+      set('cidade-input', data.municipio || '')
+      set('cep-input', (data.cep || '').replace(/\D/g,''))
+      set('telefone-input', data.ddd_telefone_1 || '')
+      set('email-input', data.email || '')
+
+      // Seleciona o estado no select
+      const estadoEl = document.getElementById('estado-select') as HTMLSelectElement | null
+      if (estadoEl && data.uf) estadoEl.value = data.uf
+
+      toast.success(`Dados encontrados: ${data.razao_social}`)
+    } catch (err) {
+      toast.error('CNPJ não encontrado na Receita Federal')
+    } finally {
+      setBuscandoCnpj(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -41,16 +84,32 @@ export default function EmpresaModal({ empresa, action, parceiros }: Props) {
           <div className="p-5 grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="form-label">Razão social <span className="text-red-400">*</span></label>
-              <input name="razao_social" className="form-input" required defaultValue={empresa?.razao_social} />
+              <input id="razao-social-input" name="razao_social" className="form-input" required defaultValue={empresa?.razao_social} />
               {errors.razao_social && <p className="form-error">{errors.razao_social[0]}</p>}
             </div>
             <div>
               <label className="form-label">Nome fantasia</label>
-              <input name="nome_fantasia" className="form-input" defaultValue={empresa?.nome_fantasia ?? ''} />
+              <input id="nome-fantasia-input" name="nome_fantasia" className="form-input" defaultValue={empresa?.nome_fantasia ?? ''} />
             </div>
             <div>
               <label className="form-label">CNPJ (só números)</label>
-              <input name="cnpj" className="form-input font-mono" placeholder="00000000000000" defaultValue={empresa?.cnpj ?? ''} />
+              <div className="flex gap-2">
+                <input
+                  id="cnpj-input"
+                  name="cnpj"
+                  className="form-input font-mono flex-1"
+                  placeholder="00000000000000"
+                  defaultValue={empresa?.cnpj ?? ''}
+                />
+                <button
+                  type="button"
+                  onClick={buscarCnpj}
+                  disabled={buscandoCnpj}
+                  className="btn btn-sm whitespace-nowrap"
+                >
+                  {buscandoCnpj ? '⏳ Buscando...' : '🔍 Buscar CNPJ'}
+                </button>
+              </div>
               {errors.cnpj && <p className="form-error">{errors.cnpj[0]}</p>}
             </div>
             <div className="col-span-2 border-t border-gray-100 pt-3">
@@ -58,31 +117,31 @@ export default function EmpresaModal({ empresa, action, parceiros }: Props) {
             </div>
             <div className="col-span-2">
               <label className="form-label">Logradouro</label>
-              <input name="logradouro" className="form-input" defaultValue={empresa?.logradouro ?? ''} />
+              <input id="logradouro-input" name="logradouro" className="form-input" defaultValue={empresa?.logradouro ?? ''} />
             </div>
             <div>
               <label className="form-label">Número</label>
-              <input name="numero" className="form-input" defaultValue={empresa?.numero ?? ''} />
+              <input id="numero-input" name="numero" className="form-input" defaultValue={empresa?.numero ?? ''} />
             </div>
             <div>
               <label className="form-label">Complemento</label>
-              <input name="complemento" className="form-input" defaultValue={empresa?.complemento ?? ''} />
+              <input id="complemento-input" name="complemento" className="form-input" defaultValue={empresa?.complemento ?? ''} />
             </div>
             <div>
               <label className="form-label">Bairro</label>
-              <input name="bairro" className="form-input" defaultValue={empresa?.bairro ?? ''} />
+              <input id="bairro-input" name="bairro" className="form-input" defaultValue={empresa?.bairro ?? ''} />
             </div>
             <div>
               <label className="form-label">CEP (só números)</label>
-              <input name="cep" className="form-input" placeholder="00000000" defaultValue={empresa?.cep ?? ''} />
+              <input id="cep-input" name="cep" className="form-input" placeholder="00000000" defaultValue={empresa?.cep ?? ''} />
             </div>
             <div>
               <label className="form-label">Cidade</label>
-              <input name="cidade" className="form-input" defaultValue={empresa?.cidade ?? ''} />
+              <input id="cidade-input" name="cidade" className="form-input" defaultValue={empresa?.cidade ?? ''} />
             </div>
             <div>
               <label className="form-label">Estado</label>
-              <select name="estado" className="form-input" defaultValue={empresa?.estado ?? ''}>
+              <select id="estado-select" name="estado" className="form-input" defaultValue={empresa?.estado ?? ''}>
                 <option value="">UF</option>
                 {UF.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
@@ -92,11 +151,11 @@ export default function EmpresaModal({ empresa, action, parceiros }: Props) {
             </div>
             <div>
               <label className="form-label">Telefone</label>
-              <input name="telefone" className="form-input" defaultValue={empresa?.telefone ?? ''} />
+              <input id="telefone-input" name="telefone" className="form-input" defaultValue={empresa?.telefone ?? ''} />
             </div>
             <div>
               <label className="form-label">E-mail de contato</label>
-              <input name="email_contato" type="email" className="form-input" defaultValue={empresa?.email_contato ?? ''} />
+              <input id="email-input" name="email_contato" type="email" className="form-input" defaultValue={empresa?.email_contato ?? ''} />
             </div>
             <div>
               <label className="form-label">Valor padrão de entrega (R$)</label>
