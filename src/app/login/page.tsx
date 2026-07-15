@@ -12,25 +12,14 @@ export default function LoginPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-
     const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      toast.error('E-mail ou senha inválidos')
+      toast.error('Erro: ' + error.message)
       setLoading(false)
       return
     }
-
-    if (data.session) {
-      // Aguarda o cookie ser gravado antes de redirecionar
-      await supabase.auth.setSession(data.session)
-      window.location.href = '/dashboard'
-      return
-    }
-
-    toast.error('Erro ao iniciar sessão. Tente novamente.')
-    setLoading(false)
+    window.location.href = '/dashboard'
   }
 
   return (
