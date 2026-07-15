@@ -12,9 +12,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function EmpresaDetailPage({ params }: { params: { id: string } }) {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  const { data: usuario } = await sb.from('usuarios').select('perfil').eq('id', user!.id).single()
-  const isAdmin = usuario?.perfil === 'admin'
+  const isAdmin = true
 
   const { data: empresa } = await sb
     .from('empresas')

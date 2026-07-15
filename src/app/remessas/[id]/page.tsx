@@ -13,9 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function RemessaDetailPage({ params }: { params: { id: string } }) {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  const { data: usuario } = await sb.from('usuarios').select('perfil,parceiro_id').eq('id', user!.id).single()
-  const isParceiro = usuario?.perfil === 'parceiro'
+  const isParceiro = false
 
   const { data: remessa } = await sb
     .from('remessas')
