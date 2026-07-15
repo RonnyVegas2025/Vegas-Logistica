@@ -6,17 +6,37 @@ import NovaRemessaModal from '@/components/modules/NovaRemessaModal'
 
 export const dynamic = 'force-dynamic'
 
-export default async function RemessasPage() {
-  const sb = createClient()
+const filtros = [
+  { label: 'Todas', value: 'todas' },
+  { label: 'Rascunho', value: 'rascunho' },
+  { label: 'Enviada', value: 'enviada' },
+  { label: 'Recebida', value: 'recebida' },
+  { label: 'Em distribuição', value: 'em_distribuicao' },
+  { label: 'Concluída', value: 'concluida' },
+]
 
-  const { data: remessas } = await sb
+export default async function RemessasPage({
+  searchParams,
+}: {
+  searchParams: { status?: string }
+}) {
+  const sb = createClient()
+  const filtro = searchParams.status
+
+  let query = sb
     .from('remessas')
     .select(`
-      id, codigo, status, data_envio, data_recebimento, observacao, criado_em,
+      id, codigo, codigo_op, status, data_envio, data_recebimento, observacao, criado_em,
       parceiros(id, nome),
-      entregas(id, status, valor_entrega)
+      malotes(valor_autorizado)
     `)
     .order('criado_em', { ascending: false })
+
+  if (filtro && filtro !== 'todas') {
+    query = query.eq('status', filtro)
+  }
+
+  const { data: remessas } = await query
 
   const { data: parceiros } = await sb.from('parceiros').select('id,nome').eq('ativo', true)
 
@@ -28,6 +48,19 @@ export default async function RemessasPage() {
           <p className="page-sub">Malotes diários enviados ao parceiro</p>
         </div>
         <NovaRemessaModal parceiros={parceiros ?? []} />
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {filtros.map(f => (
+          <Link
+            key={f.value}
+            href={`/remessas?status=${f.value}`}
+            className={`btn btn-sm ${(!filtro && f.value === 'todas') || filtro === f.value ? 'btn-primary' : ''}`}
+          >
+            {f.label}
+          </Link>
+        ))}
       </div>
 
       <div className="card">
@@ -43,7 +76,7 @@ export default async function RemessasPage() {
                 <th>Parceiro</th>
                 <th>Data envio</th>
                 <th>Recebimento</th>
-                <th>Entregas</th>
+                <th>Malotes</th>
                 <th>Total</th>
                 <th>Status</th>
                 <th></th>
@@ -51,18 +84,17 @@ export default async function RemessasPage() {
             </thead>
             <tbody>
               {(remessas ?? []).map(r => {
-                const entregas = (r.entregas as any[]) ?? []
-                const total = entregas.reduce((a: number, e: any) => a + (e.valor_entrega ?? 0), 0)
-                const entregues = entregas.filter((e: any) => e.status === 'entregue').length
+                const malotes = (r.malotes as any[]) ?? []
+                const total = malotes.reduce((a: number, m: any) => a + (m.valor_autorizado ?? 0), 0)
                 return (
                   <tr key={r.id}>
-                    <td className="mono font-semibold">{r.codigo}</td>
+                    <td className="mono font-semibold">{(r as any).codigo_op ?? r.codigo}</td>
                     <td className="font-medium">{(r.parceiros as any)?.nome}</td>
                     <td className="muted">{new Date(r.data_envio + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
                     <td className="muted">{r.data_recebimento ? new Date(r.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
                     <td>
-                      <span className="text-sm font-medium">{entregues}/{entregas.length}</span>
-                      <span className="text-xs text-gray-400 ml-1">entregas</span>
+                      <span className="text-sm font-medium">{malotes.length}</span>
+                      <span className="text-xs text-gray-400 ml-1">malotes</span>
                     </td>
                     <td className="font-semibold">{fmt_money(total)}</td>
                     <td><Badge s={r.status} /></td>
