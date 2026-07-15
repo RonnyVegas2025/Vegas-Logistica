@@ -6,9 +6,6 @@ export const dynamic = 'force-dynamic'
 
 export default async function EntregasPage({ searchParams }: { searchParams: { status?: string } }) {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  const { data: usuario } = await sb.from('usuarios').select('perfil,parceiro_id').eq('id', user!.id).single()
-  const isParceiro = usuario?.perfil === 'parceiro'
 
   let q = sb.from('entregas')
     .select(`id,status,valor_entrega,data_entrega,nome_recebedor,tipo_comprovante,comprovante_url,obs_parceiro,motivo_insucesso,
@@ -16,7 +13,6 @@ export default async function EntregasPage({ searchParams }: { searchParams: { s
     .order('criado_em',{ascending:false}).limit(200)
 
   if (searchParams.status) q = q.eq('status', searchParams.status)
-  if (isParceiro) q = q.eq('remessas.parceiro_id', usuario!.parceiro_id!)
 
   const { data: entregas } = await q
 

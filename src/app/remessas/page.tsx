@@ -8,11 +8,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function RemessasPage() {
   const sb = createClient()
-  const { data: { user } } = await sb.auth.getUser()
-  const { data: usuario } = await sb.from('usuarios').select('perfil,parceiro_id').eq('id', user!.id).single()
-  const isParceiro = usuario?.perfil === 'parceiro'
 
-  let query = sb
+  const { data: remessas } = await sb
     .from('remessas')
     .select(`
       id, codigo, status, data_envio, data_recebimento, observacao, criado_em,
@@ -21,11 +18,7 @@ export default async function RemessasPage() {
     `)
     .order('criado_em', { ascending: false })
 
-  if (isParceiro) query = query.eq('parceiro_id', usuario!.parceiro_id!)
-
-  const { data: remessas } = await query
-
-  const { data: parceiros } = isParceiro ? { data: [] } : await sb.from('parceiros').select('id,nome').eq('ativo', true)
+  const { data: parceiros } = await sb.from('parceiros').select('id,nome').eq('ativo', true)
 
   return (
     <div className="fade-in">
@@ -34,7 +27,7 @@ export default async function RemessasPage() {
           <h1 className="page-title">Remessas</h1>
           <p className="page-sub">Malotes diários enviados ao parceiro</p>
         </div>
-        {!isParceiro && <NovaRemessaModal parceiros={parceiros ?? []} />}
+        <NovaRemessaModal parceiros={parceiros ?? []} />
       </div>
 
       <div className="card">
