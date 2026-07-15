@@ -13,32 +13,59 @@ export async function atribuirEntregador(formData: FormData) {
   const forma = formData.get('forma_entrega') as string
   const prazo = formData.get('prazo_entrega') as string || null
 
-  if (!entregador_id || !malote_id) return
+  console.log('ATRIBUIR:', { malote_id, remessa_id, entregador_id, valor, forma })
 
-  await sb.from('delivery_assignments')
-    .update({ status: 'substituida', encerrado_em: new Date().toISOString() })
-    .eq('malote_id', malote_id)
-    .eq('status', 'ativa')
-
-  const { error: errAssign } = await sb.from('delivery_assignments').insert({
-    malote_id,
-    entregador_id,
-    forma_entrega: forma,
-    valor_autorizado: valor,
-    autorizado_em: new Date().toISOString(),
-    prazo_entrega: prazo,
-    status: 'ativa',
-  })
-
-  if (errAssign) {
-    console.error('Erro ao criar assignment:', errAssign.message)
+  if (!entregador_id || !malote_id) {
+    console.error('ERRO: malote_id ou entregador_id ausente')
     return
   }
 
-  await sb.from('malotes').update({
-    status: 'atribuido',
-    valor_autorizado: valor,
-  }).eq('id', malote_id)
+  // Encerra assignment ativa anterior
+  const { error: errUpdate } = await sb
+    .from('delivery_assignments')
+    .update({
+      status: 'substituida',
+      encerrado_em: new Date().toISOString(),
+      motivo_encerramento: 'Substituída por nova atribuição'
+    })
+    .eq('malote_id', malote_id)
+    .eq('status', 'ativa')
+
+  if (errUpdate) console.error('Erro ao encerrar assignment anterior:', errUpdate.message)
+
+  // Insere nova assignment
+  const { data: newAssign, error: errAssign } = await sb
+    .from('delivery_assignments')
+    .insert({
+      malote_id,
+      entregador_id,
+      forma_entrega: forma,
+      valor_autorizado: valor,
+      autorizado_em: new Date().toISOString(),
+      prazo_entrega: prazo || null,
+      status: 'ativa',
+      criado_por: null,
+    })
+    .select()
+    .single()
+
+  if (errAssign) {
+    console.error('ERRO ao inserir assignment:', errAssign.message, errAssign.details, errAssign.hint)
+    return
+  }
+
+  console.log('Assignment criada:', newAssign?.id)
+
+  // Atualiza malote
+  const { error: errMalote } = await sb
+    .from('malotes')
+    .update({
+      status: 'atribuido',
+      valor_autorizado: valor,
+    })
+    .eq('id', malote_id)
+
+  if (errMalote) console.error('Erro ao atualizar malote:', errMalote.message)
 
   redirect(`/remessas/${remessa_id}`)
 }
