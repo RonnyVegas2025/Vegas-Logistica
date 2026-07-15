@@ -42,7 +42,6 @@ export default async function DashboardPage() {
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <Link href="/remessas/nova" className="btn btn-primary">+ Nova remessa</Link>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
