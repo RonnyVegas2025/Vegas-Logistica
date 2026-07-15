@@ -109,6 +109,7 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
                 <th>Valor</th>
                 <th>Obs. Parceiro</th>
                 <th>Status</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -148,12 +149,30 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
                     <td>
                       <span className={`badge text-xs ${st.color}`}>{st.label}</span>
                     </td>
+                    <td>
+                      {m.status === 'aguardando_atribuicao' && (
+                        <a
+                          href={`/malotes/${m.id}/atribuir`}
+                          className="btn btn-xs btn-primary"
+                        >
+                          Definir entregador
+                        </a>
+                      )}
+                      {m.status !== 'aguardando_atribuicao' && (
+                        <a
+                          href={`/malotes/${m.id}`}
+                          className="btn btn-xs"
+                        >
+                          Ver detalhes
+                        </a>
+                      )}
+                    </td>
                   </tr>
                 )
               })}
               {!malotes?.length && (
                 <tr>
-                  <td colSpan={8} className="text-center text-gray-400 py-10">
+                  <td colSpan={9} className="text-center text-gray-400 py-10">
                     Nenhum malote nesta remessa
                   </td>
                 </tr>
