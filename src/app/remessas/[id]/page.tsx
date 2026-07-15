@@ -1,52 +1,48 @@
 import { createClient } from '@/lib/supabase/server'
-import { fmt_money, fmt_date, endereco_str } from '@/lib/utils'
-import Badge from '@/components/ui/Badge'
-import Stat from '@/components/ui/Stat'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import AdicionarEntregasModal from '@/components/modules/AdicionarEntregasModal'
-import RegistrarEntregadorModal from '@/components/modules/RegistrarEntregadorModal'
-import RegistrarEntregaModal from '@/components/modules/RegistrarEntregaModal'
-import AlterarStatusRemessa from '@/components/modules/AlterarStatusRemessa'
+import Link from 'next/link'
+import Badge from '@/components/ui/Badge'
 
 export const dynamic = 'force-dynamic'
 
+const STATUS_MALOTE: Record<string, { label: string; color: string }> = {
+  aguardando_atribuicao: { label: 'Aguardando entregador', color: 'bg-gray-100 text-gray-600' },
+  atribuido:             { label: 'Atribuído',             color: 'bg-blue-100 text-blue-700' },
+  em_transito:           { label: 'Em trânsito',           color: 'bg-amber-100 text-amber-700' },
+  entregue:              { label: 'Entregue',              color: 'bg-green-100 text-green-700' },
+  insucesso:             { label: 'Insucesso',             color: 'bg-red-100 text-red-700' },
+  reentrega_pendente:    { label: 'Reentrega pendente',    color: 'bg-orange-100 text-orange-700' },
+  cancelado:             { label: 'Cancelado',             color: 'bg-gray-100 text-gray-400' },
+}
+
 export default async function RemessaDetailPage({ params }: { params: { id: string } }) {
   const sb = createClient()
-  const isParceiro = false
 
   const { data: remessa } = await sb
     .from('remessas')
-    .select(`*, parceiros(id,nome,email,telefone)`)
+    .select('*, parceiros(nome)')
     .eq('id', params.id)
     .single()
 
   if (!remessa) notFound()
 
-  const { data: entregas } = await sb
-    .from('entregas')
+  const { data: malotes } = await sb
+    .from('malotes')
     .select(`
-      id, status, valor_entrega, obs_parceiro, obs_parceiro_em,
-      data_entrega, nome_recebedor, tipo_comprovante, comprovante_url,
-      motivo_insucesso, obs_entrega, atribuido_em,
-      empresas(id, razao_social, cnpj),
-      entregadores(id, nome)
+      id, codigo_op, status, valor_autorizado,
+      end_cidade, end_estado, end_logradouro, end_numero,
+      obs_parceiro, obs_parceiro_em,
+      empresas(razao_social, cnpj),
+      malote_itens(id, numero_serie, descricao)
     `)
     .eq('remessa_id', params.id)
-    .order('criado_em', { ascending: true })
+    .order('status')
 
-  const { data: empresas } = isParceiro ? { data: [] } : await sb
-    .from('empresas').select('id,razao_social,cnpj,logradouro,numero,complemento,bairro,cidade,estado,cep,valor_entrega_padrao').eq('ativo', true).order('razao_social')
-
-  const { data: entregadores } = isParceiro ? { data: [] } : await sb
-    .from('entregadores').select('id,nome,parceiro_id').eq('ativo', true).order('nome')
-
-  const ents = (entregas ?? [])
-  const total = ents.reduce((a, e) => a + (e.valor_entrega ?? 0), 0)
-  const entregues = ents.filter(e => e.status === 'entregue').length
-  const insucessos = ents.filter(e => e.status === 'insucesso').length
-  const pendentes = ents.filter(e => ['pendente', 'em_andamento'].includes(e.status)).length
-  const comObs = ents.filter(e => e.obs_parceiro && !(e.entregadores as any)?.length).length
+  const total = malotes?.length ?? 0
+  const entregues = malotes?.filter(m => m.status === 'entregue').length ?? 0
+  const pendentes = malotes?.filter(m => ['aguardando_atribuicao','atribuido','em_transito'].includes(m.status)).length ?? 0
+  const insucessos = malotes?.filter(m => m.status === 'insucesso').length ?? 0
+  const valorTotal = malotes?.reduce((acc, m) => acc + (m.valor_autorizado ?? 0), 0) ?? 0
 
   return (
     <div className="fade-in">
@@ -54,137 +50,113 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
       <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
         <Link href="/remessas" className="hover:text-gray-600">Remessas</Link>
         <span>/</span>
-        <span className="font-mono text-gray-700 font-semibold">{remessa.codigo}</span>
+        <span className="font-mono text-gray-700">{remessa.codigo_op ?? remessa.codigo}</span>
         <Badge s={remessa.status} />
       </div>
 
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="page-title">{remessa.codigo}</h1>
+          <h1 className="page-title font-mono">{remessa.codigo_op ?? remessa.codigo}</h1>
           <p className="page-sub">
             Parceiro: <strong>{(remessa.parceiros as any)?.nome}</strong>
-            {' · '}Envio: {fmt_date(remessa.data_envio)}
-            {remessa.data_recebimento && ` · Recebido: ${fmt_date(remessa.data_recebimento)}`}
+            {' · '}Envio: {new Date(remessa.data_envio).toLocaleDateString('pt-BR')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {!isParceiro && (
-            <>
-              <AlterarStatusRemessa remessaId={remessa.id} statusAtual={remessa.status} />
-              <AdicionarEntregasModal remessaId={remessa.id} empresas={empresas ?? []} />
-            </>
-          )}
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div className="stat">
+          <div className="stat-label">Total malotes</div>
+          <div className="stat-value text-gray-700">{total}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Entregues</div>
+          <div className="stat-value text-green-600">{entregues}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Pendentes</div>
+          <div className="stat-value text-amber-600">{pendentes}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Insucessos</div>
+          <div className="stat-value text-red-500">{insucessos}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Valor total</div>
+          <div className="stat-value">
+            {new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(valorTotal)}
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
-        <Stat label="Total entregas"  value={ents.length} />
-        <Stat label="Entregues"       value={entregues}   color="text-green-600" sub={ents.length ? `${Math.round(entregues/ents.length*100)}%` : ''} />
-        <Stat label="Pendentes"       value={pendentes}   color="text-amber-600" />
-        <Stat label="Insucessos"      value={insucessos}  color="text-red-500" />
-        <Stat label="Valor total"     value={fmt_money(total)} />
-      </div>
-
-      {/* Alerta obs parceiro */}
-      {comObs > 0 && !isParceiro && (
-        <div className="alert-warn mb-4">
-          ⚠ {comObs} entrega(s) com observação do parceiro aguardando registro do entregador
-        </div>
-      )}
-
-      {/* Tabela de entregas */}
+      {/* Lista de malotes */}
       <div className="card">
         <div className="card-header">
-          <span className="card-title">Entregas desta remessa</span>
-          <span className="badge bg-gray-100 text-gray-600">{ents.length}</span>
+          <span className="card-title">Malotes desta remessa</span>
+          <span className="badge bg-gray-100 text-gray-600">{total}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="tbl w-full">
             <thead>
               <tr>
+                <th>Código</th>
                 <th>Empresa</th>
-                <th>Endereço</th>
+                <th>CNPJ</th>
+                <th>Cidade / UF</th>
+                <th>Itens</th>
                 <th>Valor</th>
-                <th>Entregador</th>
-                <th>Obs. parceiro</th>
+                <th>Obs. Parceiro</th>
                 <th>Status</th>
-                <th>Comprovante</th>
-                {!isParceiro && <th>Ações</th>}
               </tr>
             </thead>
             <tbody>
-              {ents.map(e => {
-                const empresa = e.empresas as any
-                const entregador = e.entregadores as any
-                const temObs = e.obs_parceiro && !(e.entregadores as any)?.length
+              {(malotes ?? []).map(m => {
+                const st = STATUS_MALOTE[m.status] ?? { label: m.status, color: 'bg-gray-100 text-gray-600' }
+                const itens = (m.malote_itens as any[]) ?? []
+                const empresa = m.empresas as any
                 return (
-                  <tr key={e.id} className={temObs ? 'bg-amber-50/40' : ''}>
+                  <tr key={m.id}>
+                    <td className="mono font-semibold text-xs">{m.codigo_op}</td>
                     <td>
-                      <div className="font-semibold text-gray-800">{empresa?.razao_social}</div>
-                      {empresa?.cnpj && <div className="text-xs text-gray-400 font-mono">{empresa.cnpj}</div>}
+                      <div className="font-medium text-sm">{empresa?.razao_social ?? '—'}</div>
                     </td>
-                    <td className="muted max-w-[180px] truncate">{endereco_str(e as any) || '—'}</td>
-                    <td className="font-semibold">{fmt_money(e.valor_entrega)}</td>
+                    <td className="mono text-xs text-gray-500">{empresa?.cnpj ?? '—'}</td>
+                    <td className="muted text-sm">
+                      {[m.end_cidade, m.end_estado].filter(Boolean).join(' / ') || '—'}
+                    </td>
                     <td>
-                      {entregador
-                        ? <span className="text-sm font-medium text-gray-700">{entregador.nome}</span>
-                        : <span className="text-xs text-gray-400 italic">Não atribuído</span>
+                      <span className="badge bg-blue-50 text-blue-700 text-xs">
+                        {itens.length} {itens.length === 1 ? 'item' : 'itens'}
+                      </span>
+                    </td>
+                    <td className="font-medium text-sm">
+                      {m.valor_autorizado > 0
+                        ? new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(m.valor_autorizado)
+                        : <span className="text-gray-400 text-xs">A definir</span>
                       }
                     </td>
-                    <td className="max-w-[200px]">
-                      {e.obs_parceiro
-                        ? (
-                          <div className={`text-xs rounded px-2 py-1.5 ${temObs ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-gray-50 text-gray-600'}`}>
-                            &ldquo;{e.obs_parceiro}&rdquo;
+                    <td className="max-w-xs">
+                      {m.obs_parceiro
+                        ? <div className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 max-w-[200px] truncate" title={m.obs_parceiro}>
+                            {m.obs_parceiro}
                           </div>
-                        )
-                        : isParceiro
-                          ? <ObsParceiroInline entregaId={e.id} />
-                          : <span className="text-xs text-gray-300">—</span>
+                        : <span className="text-gray-300 text-xs">—</span>
                       }
                     </td>
-                    <td><Badge s={e.status} /></td>
                     <td>
-                      {e.comprovante_url
-                        ? <a href={e.comprovante_url} target="_blank" className="btn btn-xs">Ver 📎</a>
-                        : e.status === 'entregue'
-                          ? <span className="text-xs text-gray-400">Sem anexo</span>
-                          : <span className="text-gray-300">—</span>
-                      }
-                      {e.motivo_insucesso && (
-                        <div className="text-xs text-amber-600 mt-1">{e.motivo_insucesso}</div>
-                      )}
+                      <span className={`badge text-xs ${st.color}`}>{st.label}</span>
                     </td>
-                    {!isParceiro && (
-                      <td>
-                        <div className="flex items-center gap-1">
-                          {!entregador && e.status === 'pendente' && (
-                            <RegistrarEntregadorModal
-                              entregaId={e.id}
-                              empresaNome={empresa?.razao_social}
-                              entregadores={entregadores ?? []}
-                              valorAtual={e.valor_entrega}
-                            />
-                          )}
-                          {e.status !== 'entregue' && e.status !== 'insucesso' && (
-                            <RegistrarEntregaModal
-                              entregaId={e.id}
-                              empresaNome={empresa?.razao_social}
-                              statusAtual={e.status}
-                            />
-                          )}
-                        </div>
-                      </td>
-                    )}
                   </tr>
                 )
               })}
-              {!ents.length && (
-                <tr><td colSpan={8} className="text-center text-gray-400 py-12">
-                  Nenhuma entrega adicionada. {!isParceiro && 'Use "Adicionar entregas" para incluir empresas.'}
-                </td></tr>
+              {!malotes?.length && (
+                <tr>
+                  <td colSpan={8} className="text-center text-gray-400 py-10">
+                    Nenhum malote nesta remessa
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -192,10 +164,4 @@ export default async function RemessaDetailPage({ params }: { params: { id: stri
       </div>
     </div>
   )
-}
-
-// Componente inline para parceiro adicionar obs (client component pequeno embutido)
-function ObsParceiroInline({ entregaId }: { entregaId: string }) {
-  // Renderizado no servidor — o modal real está no client component
-  return <span className="text-xs text-gray-300 italic">Clique para adicionar obs.</span>
 }
