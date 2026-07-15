@@ -11,6 +11,7 @@ const NAV = [
   { label:'Empresas',     href:'/empresas',     emoji:'🏢' },
   { label:'Entregadores', href:'/entregadores', emoji:'🚴' },
   { label:'Filiais',      href:'/filiais',      emoji:'🏬' },
+  { label:'Taxas',        href:'/taxas',        emoji:'💲' },
 ]
 
 export default function SidebarSimples() {
