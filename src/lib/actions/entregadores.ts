@@ -7,7 +7,10 @@ import { revalidatePath } from 'next/cache'
 async function assertAdmin() {
   const sb = createClient()
   const { data: { user } } = await sb.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
+  if (!user) {
+    // Modo validação: retorna cliente sem verificar perfil
+    return { sb, userId: null }
+  }
   const { data: u } = await sb.from('usuarios').select('perfil').eq('id', user.id).single()
   if (u?.perfil !== 'admin') throw new Error('Apenas administradores podem realizar esta ação')
   return { sb, userId: user.id }

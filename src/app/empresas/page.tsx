@@ -10,7 +10,11 @@ export default async function EmpresasPage() {
   const sb = createClient()
   const { data: empresas } = await sb
     .from('empresas')
-    .select('id,razao_social,nome_fantasia,cnpj,cidade,estado,ativo,valor_entrega_padrao')
+    .select(`
+      id, razao_social, nome_fantasia, cnpj, cidade, estado,
+      ativo, valor_entrega_padrao,
+      company_delivery_addresses(id)
+    `)
     .order('razao_social')
   const { data: parceiros } = await sb.from('parceiros').select('id,nome').eq('ativo',true)
 
@@ -33,7 +37,7 @@ export default async function EmpresasPage() {
             <thead>
               <tr>
                 <th>Razão social</th><th>CNPJ</th><th>Cidade / UF</th>
-                <th>Valor padrão</th><th>Status</th><th></th>
+                <th>Valor padrão</th><th>Status</th><th>Endereço</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -51,11 +55,17 @@ export default async function EmpresasPage() {
                       : '—'}
                   </td>
                   <td><Badge s={e.ativo?'ativo':'inativo'}/></td>
+                  <td>
+                    {((e.company_delivery_addresses as any[])?.length > 0)
+                      ? <span className="badge bg-green-100 text-green-700 text-xs">✓ Cadastrado</span>
+                      : <span className="badge bg-red-100 text-red-600 text-xs">✗ Pendente</span>
+                    }
+                  </td>
                   <td><Link href={`/empresas/${e.id}`} className="btn btn-xs">Gerenciar →</Link></td>
                 </tr>
               ))}
               {!empresas?.length&&(
-                <tr><td colSpan={6} className="text-center text-gray-400 py-10">Nenhuma empresa cadastrada</td></tr>
+                <tr><td colSpan={7} className="text-center text-gray-400 py-10">Nenhuma empresa cadastrada</td></tr>
               )}
             </tbody>
           </table>
