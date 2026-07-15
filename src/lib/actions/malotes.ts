@@ -69,3 +69,50 @@ export async function atribuirEntregador(formData: FormData) {
 
   redirect(`/remessas/${remessa_id}`)
 }
+
+export async function registrarEntrega(formData: FormData) {
+  const sb = createClient()
+
+  const malote_id = formData.get('malote_id') as string
+  const remessa_id = formData.get('remessa_id') as string
+  const resultado = formData.get('resultado') as string
+  const nome_recebedor = formData.get('nome_recebedor') as string || null
+  const observacao = formData.get('observacao') as string || null
+  const motivo_insucesso = formData.get('motivo_insucesso') as string || null
+
+  if (!malote_id || !resultado) return
+
+  // Busca assignment ativa
+  const { data: assignment } = await sb
+    .from('delivery_assignments')
+    .select('id')
+    .eq('malote_id', malote_id)
+    .eq('status', 'ativa')
+    .single()
+
+  if (!assignment) return
+
+  // Registra tentativa
+  await sb.from('delivery_attempts').insert({
+    assignment_id: assignment.id,
+    resultado: resultado as any,
+    nome_recebedor,
+    observacao,
+    motivo_insucesso: motivo_insucesso as any,
+    data_tentativa: new Date().toISOString(),
+  })
+
+  // Encerra assignment se entregue
+  if (resultado === 'entregue') {
+    await sb.from('delivery_assignments')
+      .update({ status: 'encerrada', encerrado_em: new Date().toISOString() })
+      .eq('id', assignment.id)
+  }
+
+  // Atualiza status do malote
+  await sb.from('malotes').update({
+    status: resultado === 'entregue' ? 'entregue' : 'insucesso',
+  }).eq('id', malote_id)
+
+  redirect(`/remessas/${remessa_id}`)
+}
