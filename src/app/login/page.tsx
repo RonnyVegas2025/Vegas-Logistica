@@ -8,27 +8,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [debug, setDebug] = useState('')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setDebug('Tentando login...')
 
     const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       toast.error('Erro: ' + error.message)
-      setDebug('Erro: ' + error.message)
       setLoading(false)
       return
     }
 
-    setDebug('Login OK! Session: ' + (data.session ? 'sim' : 'não') + ' | User: ' + (data.user?.email ?? 'none'))
-
+    // Aguarda o cookie de sessão ser gravado antes de navegar
     setTimeout(() => {
-      setDebug('Redirecionando...')
       window.location.replace('/dashboard')
     }, 2000)
   }
@@ -65,11 +60,6 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              {debug && (
-                <div className="text-xs bg-gray-100 rounded p-2 font-mono text-gray-600">
-                  {debug}
-                </div>
-              )}
               <button type="submit" disabled={loading}
                 className="btn btn-primary w-full justify-center mt-1">
                 {loading ? 'Entrando…' : 'Entrar'}
