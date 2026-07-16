@@ -8,23 +8,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [debug, setDebug] = useState('')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setDebug('Tentando login...')
+
     const supabase = createClient()
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
     if (error) {
-      toast.error('E-mail ou senha inválidos')
+      toast.error('Erro: ' + error.message)
+      setDebug('Erro: ' + error.message)
       setLoading(false)
       return
     }
-    if (data.session) {
-      window.location.href = '/dashboard'
-      return
-    }
-    toast.error('Erro ao iniciar sessão')
-    setLoading(false)
+
+    setDebug('Login OK! Session: ' + (data.session ? 'sim' : 'não') + ' | User: ' + (data.user?.email ?? 'none'))
+
+    setTimeout(() => {
+      setDebug('Redirecionando...')
+      window.location.replace('/dashboard')
+    }, 2000)
   }
 
   return (
@@ -50,20 +56,20 @@ export default function LoginPage() {
               <div>
                 <label className="form-label">Senha</label>
                 <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="form-input pr-10"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                  />
+                  <input type={showPassword ? 'text' : 'password'} className="form-input pr-10"
+                    placeholder="••••••••" value={password}
+                    onChange={e => setPassword(e.target.value)} required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPassword ? '🙈' : '👁'}
                   </button>
                 </div>
               </div>
+              {debug && (
+                <div className="text-xs bg-gray-100 rounded p-2 font-mono text-gray-600">
+                  {debug}
+                </div>
+              )}
               <button type="submit" disabled={loading}
                 className="btn btn-primary w-full justify-center mt-1">
                 {loading ? 'Entrando…' : 'Entrar'}
