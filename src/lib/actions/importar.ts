@@ -78,7 +78,7 @@ export async function importarRemessa(formData: FormData) {
     if (!empresa_id) continue
 
     // Gera código do malote
-    const { data: seqData } = await sb.rpc('nextval', { seq: 'malote_op_seq' }).single()
+    const { data: seqData } = await sb.rpc('nextval_malote')
     const malote_codigo = `MAL-${ano}-${String((seqData as any) || 1).padStart(5, '0')}`
 
     // Cria malote
