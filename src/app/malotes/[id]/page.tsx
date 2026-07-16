@@ -51,6 +51,8 @@ export default async function MaloteDetailPage({ params }: { params: { id: strin
   const assignments = ((malote.delivery_assignments as any[]) ?? [])
     .sort((a, b) => new Date(b.autorizado_em).getTime() - new Date(a.autorizado_em).getTime())
   const activeAssignment = assignments.find(a => a.status === 'ativa')
+    ?? assignments.find(a => a.status === 'encerrada')
+    ?? assignments[0]
 
   return (
     <div className="fade-in max-w-3xl mx-auto">
@@ -146,7 +148,15 @@ export default async function MaloteDetailPage({ params }: { params: { id: strin
             ? <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{activeAssignment.entregadores?.nome}</span>
-                  <span className="badge bg-green-100 text-green-700 text-xs">Ativo</span>
+                  {activeAssignment.status === 'encerrada' && malote.status === 'entregue' && (
+                    <span className="badge bg-green-100 text-green-700 text-xs">✓ Entregue</span>
+                  )}
+                  {activeAssignment.status === 'encerrada' && malote.status === 'insucesso' && (
+                    <span className="badge bg-red-100 text-red-700 text-xs">✗ Insucesso</span>
+                  )}
+                  {activeAssignment.status === 'ativa' && (
+                    <span className="badge bg-green-100 text-green-700 text-xs">Ativo</span>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-gray-500">
                   <div>Forma: <strong>{FORMA_LABEL[activeAssignment.forma_entrega] ?? activeAssignment.forma_entrega}</strong></div>

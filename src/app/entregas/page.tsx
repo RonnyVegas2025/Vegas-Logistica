@@ -164,6 +164,8 @@ export default async function EntregasPage({
                 const itens = (m.malote_itens as any[]) ?? []
                 const assignments = (m.delivery_assignments as any[]) ?? []
                 const activeAssignment = assignments.find(a => a.status === 'ativa')
+                  ?? assignments.find(a => a.status === 'encerrada')
+                  ?? assignments[0]
                 const entregadorNome = activeAssignment?.entregadores?.nome
 
                 return (
