@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 
 export async function createTaxa(_id: string | null, formData: FormData) {
   const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return { error: { _form: ['Não autenticado'] } }
   const cidade = formData.get('cidade') as string
   const estado = formData.get('estado') as string
   const valor_padrao = parseFloat(formData.get('valor_padrao') as string)
@@ -19,6 +21,8 @@ export async function createTaxa(_id: string | null, formData: FormData) {
 
 export async function updateTaxa(id: string | null, formData: FormData) {
   const sb = createClient()
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return { error: { _form: ['Não autenticado'] } }
   const cidade = formData.get('cidade') as string
   const estado = formData.get('estado') as string
   const valor_padrao = parseFloat(formData.get('valor_padrao') as string)

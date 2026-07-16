@@ -6,6 +6,9 @@ import { redirect } from 'next/navigation'
 export async function atribuirEntregador(formData: FormData) {
   const sb = createClient()
 
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
+
   const malote_id = formData.get('malote_id') as string
   const remessa_id = formData.get('remessa_id') as string
   const entregador_id = formData.get('entregador_id') as string
@@ -72,6 +75,9 @@ export async function atribuirEntregador(formData: FormData) {
 
 export async function registrarEntrega(formData: FormData) {
   const sb = createClient()
+
+  const { data: { user } } = await sb.auth.getUser()
+  if (!user) return
 
   const malote_id = formData.get('malote_id') as string
   const remessa_id = formData.get('remessa_id') as string
