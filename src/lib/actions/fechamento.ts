@@ -78,10 +78,18 @@ export async function criarFechamentoPorRemessa(formData: FormData) {
     })
   )
 
-  // Se previsão de pagamento informada, salva como observação adicional
-  if (previsao_pagamento) {
+  const forma_pagamento = formData.get('forma_pagamento') as string || null
+
+  // Monta observações completas
+  const obsCompleta = [
+    observacoes,
+    previsao_pagamento ? `Previsão: ${previsao_pagamento}` : null,
+    forma_pagamento ? `Forma: ${forma_pagamento}` : null,
+  ].filter(Boolean).join('\n')
+
+  if (obsCompleta) {
     await sb.from('fechamentos')
-      .update({ observacoes: `${observacoes ?? ''}\nPrevisão: ${previsao_pagamento}`.trim() })
+      .update({ observacoes: obsCompleta })
       .eq('id', fechamento.id)
   }
 

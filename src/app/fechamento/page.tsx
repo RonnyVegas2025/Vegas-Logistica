@@ -178,6 +178,7 @@ export default async function FechamentoPage() {
                   <th>Previsão pgto</th>
                   <th>Status</th>
                   <th>Ações</th>
+                  <th>Recibo</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,6 +231,11 @@ export default async function FechamentoPage() {
                         )}
                       </div>
                     </td>
+                    <td>
+                      <a href={`/fechamento/recibo/${f.id}`} className="btn btn-xs" target="_blank">
+                        📄 Recibo
+                      </a>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -252,6 +258,7 @@ export default async function FechamentoPage() {
                   <th>Malotes</th>
                   <th>Valor pago</th>
                   <th>Pago em</th>
+                  <th>Recibo</th>
                 </tr>
               </thead>
               <tbody>
@@ -270,6 +277,11 @@ export default async function FechamentoPage() {
                     <td className="font-semibold text-green-700">{fmt(f.valor_total)}</td>
                     <td className="text-sm text-gray-500">
                       {f.pago_em ? new Date(f.pago_em).toLocaleDateString('pt-BR') : '—'}
+                    </td>
+                    <td>
+                      <a href={`/fechamento/recibo/${f.id}`} className="btn btn-xs" target="_blank">
+                        📄 Recibo
+                      </a>
                     </td>
                   </tr>
                 ))}

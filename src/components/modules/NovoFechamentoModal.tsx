@@ -114,6 +114,19 @@ export default function NovoFechamentoModal({ remessas, parceiros, entregadores 
               <p className="form-hint">Data prevista para realizar o pagamento</p>
             </div>
 
+            {/* Forma de pagamento */}
+            <div>
+              <label className="form-label">Forma de pagamento</label>
+              <select name="forma_pagamento" className="form-input">
+                <option value="">Selecionar...</option>
+                <option value="PIX">PIX</option>
+                <option value="Depósito bancário">Depósito bancário</option>
+                <option value="Transferência bancária">Transferência bancária</option>
+                <option value="Crédito cartão Vegas">Crédito cartão Vegas</option>
+                <option value="Dinheiro">Dinheiro</option>
+              </select>
+            </div>
+
             {/* Observações */}
             <div>
               <label className="form-label">Observações</label>
