@@ -4,6 +4,45 @@ import * as XLSX from 'xlsx'
 import { toast } from 'sonner'
 import { importarRemessa } from '@/lib/actions/importar'
 
+function normalizarCidade(cidade: string): string {
+  if (!cidade) return cidade
+  // Converte para title case e normaliza acentos comuns
+  const mapa: Record<string, string> = {
+    'MARINGA': 'Maringá',
+    'ROLANDIA': 'Rolândia',
+    'FOZ DO IGUACU': 'Foz do Iguaçu',
+    'FOZ DE IGUACU': 'Foz do Iguaçu',
+    'SAO TOME': 'São Tomé',
+    'IBIPORA': 'Ibiporã',
+    'APUCARANA': 'Apucarana',
+    'LONDRINA': 'Londrina',
+    'MARIALVA': 'Marialva',
+    'MANDAGUACU': 'Mandaguaçu',
+    'CAMBE': 'Cambé',
+    'SARANDI': 'Sarandi',
+    'UMUARAMA': 'Umuarama',
+    'CASCAVEL': 'Cascavel',
+    'ARAPONGAS': 'Arapongas',
+    'LOANDA': 'Loanda',
+    'PINHAIS': 'Pinhais',
+    'PEABIRU': 'Peabiru',
+    'NOVA ESPERANCA': 'Nova Esperança',
+    'CIDADE GAUCHA': 'Cidade Gaúcha',
+    'BELA VISTA DO PARAISO': 'Bela Vista do Paraíso',
+    'MARECHAL CANDIDO RONDON': 'Marechal Cândido Rondon',
+    'FLORESTA': 'Floresta',
+    'TAMARANA': 'Tamarana',
+    'SANTA TEREZA DO OESTE': 'Santa Tereza do Oeste',
+    'MANDAGUARI': 'Mandaguari',
+  }
+
+  const upper = cidade.trim().toUpperCase()
+  if (mapa[upper]) return mapa[upper]
+
+  // Se não está no mapa, converte para Title Case
+  return cidade.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+}
+
 interface LinhaImport {
   numero_linha: number
   id_produto: string
@@ -117,7 +156,7 @@ export default function ImportarRemessaWizard() {
         const existente = empresasMap[cnpj]
         const receita = receitaMap[cnpj]
 
-        const cidade = existente?.cidade || receita?.municipio || ''
+        const cidade = normalizarCidade(existente?.cidade || receita?.municipio || '')
         const estado = existente?.estado || receita?.uf || ''
         let valor_entrega = existente?.valor_entrega_padrao
 
