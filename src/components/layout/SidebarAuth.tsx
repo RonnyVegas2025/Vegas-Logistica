@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 const NAV_ADMIN = [
   { label:'Dashboard',    href:'/dashboard',    emoji:'◈' },
   { label:'Remessas',     href:'/remessas',     emoji:'📦' },
+  { label:'Importar',     href:'/remessas/importar', emoji:'📥' },
   { label:'Entregas',     href:'/entregas',     emoji:'📍' },
   { label:'Fechamento',   href:'/fechamento',   emoji:'💰' },
   { label:'Empresas',     href:'/empresas',     emoji:'🏢' },
