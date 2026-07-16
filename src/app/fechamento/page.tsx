@@ -232,7 +232,7 @@ export default async function FechamentoPage() {
                       </div>
                     </td>
                     <td>
-                      <a href={`/fechamento/recibo/${f.id}`} className="btn btn-xs" target="_blank">
+                      <a href={`/recibo/${f.id}`} className="btn btn-xs" target="_blank">
                         📄 Recibo
                       </a>
                     </td>
@@ -279,7 +279,7 @@ export default async function FechamentoPage() {
                       {f.pago_em ? new Date(f.pago_em).toLocaleDateString('pt-BR') : '—'}
                     </td>
                     <td>
-                      <a href={`/fechamento/recibo/${f.id}`} className="btn btn-xs" target="_blank">
+                      <a href={`/recibo/${f.id}`} className="btn btn-xs" target="_blank">
                         📄 Recibo
                       </a>
                     </td>

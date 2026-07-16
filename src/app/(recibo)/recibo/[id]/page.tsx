@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import ImprimirButton from '@/components/modules/ImprimirButton'
+import ImprimirButton from './ImprimirButton'
 
 export const dynamic = 'force-dynamic'
 
