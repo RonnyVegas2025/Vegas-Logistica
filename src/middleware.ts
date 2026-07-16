@@ -25,23 +25,32 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // IMPORTANTE: não usar getUser() no middleware pois pode causar loop
+  // Apenas verificar se existe cookie de sessão
+  const { data: { session } } = await supabase.auth.getSession()
   const { pathname } = request.nextUrl
 
   if (pathname === '/') {
-    return NextResponse.redirect(new URL(user ? '/dashboard' : '/login', request.url))
+    return NextResponse.redirect(
+      new URL(session ? '/dashboard' : '/login', request.url)
+    )
   }
 
   if (pathname.startsWith('/login')) {
-    if (user) return NextResponse.redirect(new URL('/dashboard', request.url))
+    if (session) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
     return supabaseResponse
   }
 
-  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/')
+  ) {
     return supabaseResponse
   }
 
-  if (!user) {
+  if (!session) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
