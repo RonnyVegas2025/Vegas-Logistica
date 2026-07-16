@@ -170,7 +170,10 @@ export async function criarFechamentoSelecionado(formData: FormData) {
     .select('id')
     .single()
 
-  if (errFech) return { error: errFech.message }
+  if (errFech) {
+    console.error('ERRO INSERT FECHAMENTO:', JSON.stringify(errFech, null, 2))
+    return { error: errFech.message }
+  }
 
   await sb.from('fechamento_malotes').insert(
     malotes.map(m => {
