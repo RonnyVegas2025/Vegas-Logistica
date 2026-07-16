@@ -77,6 +77,31 @@ export async function importarRemessa(formData: FormData) {
 
     if (!empresa_id) continue
 
+    // Cria endereço de entrega se não existir
+    const { data: cdaExistente } = await sb
+      .from('company_delivery_addresses')
+      .select('id')
+      .eq('empresa_id', empresa_id)
+      .limit(1)
+      .single()
+
+    if (!cdaExistente && grupo.logradouro && grupo.cidade) {
+      await sb.from('company_delivery_addresses').insert({
+        empresa_id,
+        nome_identificador: 'Endereço Principal',
+        origem: 'cadastral',
+        logradouro: grupo.logradouro,
+        numero: grupo.numero || null,
+        complemento: grupo.complemento || null,
+        bairro: grupo.bairro || null,
+        cidade: grupo.cidade,
+        estado: grupo.estado,
+        cep: grupo.cep || null,
+        principal: true,
+        ativo: true,
+      })
+    }
+
     // Gera código do malote
     const { data: seqData } = await sb.rpc('nextval_malote')
     const malote_codigo = `MAL-${ano}-${String((seqData as any) || 1).padStart(5, '0')}`
