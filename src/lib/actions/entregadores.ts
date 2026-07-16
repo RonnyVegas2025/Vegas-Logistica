@@ -17,6 +17,7 @@ export async function createEntregador(_id: string | null, formData: FormData) {
   const { sb } = await assertAdmin()
   const raw = Object.fromEntries(formData)
   const formas = formData.getAll('formas_habilitadas') as string[]
+  const meios = formData.getAll('meios_pagamento') as string[]
   const parsed = EntregadorSchema.safeParse({
     ...raw,
     ativo: raw.ativo === 'true',
@@ -26,7 +27,7 @@ export async function createEntregador(_id: string | null, formData: FormData) {
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
-  const { error } = await sb.from('entregadores').insert(parsed.data)
+  const { error } = await sb.from('entregadores').insert({ ...parsed.data, meios_pagamento: meios })
   if (error) return { error: { _form: [error.message] } }
 
   revalidatePath('/entregadores')
@@ -37,6 +38,7 @@ export async function updateEntregador(id: string | null, formData: FormData) {
   const { sb } = await assertAdmin()
   const raw = Object.fromEntries(formData)
   const formas = formData.getAll('formas_habilitadas') as string[]
+  const meios = formData.getAll('meios_pagamento') as string[]
   const parsed = EntregadorSchema.safeParse({
     ...raw,
     ativo: raw.ativo === 'true',
@@ -46,7 +48,7 @@ export async function updateEntregador(id: string | null, formData: FormData) {
   })
   if (!parsed.success) return { error: parsed.error.flatten().fieldErrors }
 
-  const { error } = await sb.from('entregadores').update(parsed.data).eq('id', id)
+  const { error } = await sb.from('entregadores').update({ ...parsed.data, meios_pagamento: meios }).eq('id', id)
   if (error) return { error: { _form: [error.message] } }
 
   revalidatePath('/entregadores')

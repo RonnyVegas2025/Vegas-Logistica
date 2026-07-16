@@ -126,6 +126,34 @@ export default function EntregadorModal({ entregador, action, filiais, parceiros
               <label className="form-label">Conta</label>
               <input name="conta" className="form-input" defaultValue={entregador?.conta ?? ''} />
             </div>
+            <div className="col-span-2 border-t border-gray-100 pt-3">
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                Meios de pagamento aceitos
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'pix', label: 'PIX' },
+                  { value: 'deposito', label: 'Depósito bancário' },
+                  { value: 'transferencia', label: 'Transferência bancária' },
+                  { value: 'cartao_vegas', label: 'Crédito cartão Vegas Plus' },
+                  { value: 'dinheiro', label: 'Dinheiro' },
+                ].map(m => {
+                  const meios: string[] = entregador?.meios_pagamento ?? []
+                  return (
+                    <label key={m.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="meios_pagamento"
+                        value={m.value}
+                        defaultChecked={meios.includes(m.value)}
+                        className="w-4 h-4"
+                      />
+                      {m.label}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
             <div className="col-span-2">
               <label className="form-label">Observações</label>
               <textarea name="observacoes" className="form-input" rows={2} defaultValue={entregador?.observacoes ?? ''} />
