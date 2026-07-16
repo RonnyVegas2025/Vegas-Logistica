@@ -126,3 +126,66 @@ export async function marcarPago(formData: FormData) {
   revalidatePath('/fechamento')
   return { success: true }
 }
+
+export async function criarFechamentoSelecionado(formData: FormData) {
+  const sb = createClient()
+
+  const malote_ids: string[] = JSON.parse(formData.get('malote_ids') as string ?? '[]')
+  const tipo_pagamento = formData.get('tipo_pagamento') as string
+  const parceiro_id = formData.get('parceiro_id') as string || null
+  const entregador_id = formData.get('entregador_id') as string || null
+  const previsao_pagamento = formData.get('previsao_pagamento') as string || null
+  const forma_pagamento = formData.get('forma_pagamento') as string || null
+  const observacoes = formData.get('observacoes') as string || null
+
+  if (!malote_ids.length) return { error: 'Selecione ao menos um malote' }
+
+  const { data: malotes } = await sb
+    .from('malotes')
+    .select('id, valor_autorizado, delivery_assignments(id, status)')
+    .in('id', malote_ids)
+
+  if (!malotes?.length) return { error: 'Malotes não encontrados' }
+
+  const valor_total = malotes.reduce((acc, m) => acc + (m.valor_autorizado ?? 0), 0)
+
+  const obsCompleta = [
+    observacoes,
+    previsao_pagamento ? `Previsão: ${previsao_pagamento}` : null,
+    forma_pagamento ? `Forma: ${forma_pagamento}` : null,
+  ].filter(Boolean).join('\n')
+
+  const { data: fechamento, error: errFech } = await sb
+    .from('fechamentos')
+    .insert({
+      tipo_pagamento,
+      parceiro_id: tipo_pagamento === 'nex7' ? parceiro_id : null,
+      entregador_id: tipo_pagamento === 'entregador' ? entregador_id : null,
+      quantidade_entregas: malotes.length,
+      valor_total,
+      valor_acordado: valor_total,
+      status: 'pendente',
+      observacoes: obsCompleta || null,
+    })
+    .select('id')
+    .single()
+
+  if (errFech) return { error: errFech.message }
+
+  await sb.from('fechamento_malotes').insert(
+    malotes.map(m => {
+      const assignments = (m.delivery_assignments as any[]) ?? []
+      const enc = assignments.find(a => a.status === 'encerrada') ?? assignments[0]
+      return {
+        fechamento_id: fechamento.id,
+        malote_id: m.id,
+        assignment_id: enc?.id ?? null,
+        valor_autorizado: m.valor_autorizado,
+        valor_pago: m.valor_autorizado,
+      }
+    })
+  )
+
+  revalidatePath('/fechamento')
+  return { success: true, fechamento_id: fechamento.id }
+}
